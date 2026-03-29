@@ -259,3 +259,60 @@ body { background: var(--paper); padding-top: 60px; }
   .arc-sidebar { position: static; max-height: none; }
   .arc-generator-bar { padding: 16px; }
 }
+
+/* ── NEW ELEMENTS v2 ── */
+.gen-suggestions {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;
+}
+.gen-sug {
+  font-family: var(--mono); font-size: 11px;
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
+  color: rgba(255,255,255,.55); padding: 4px 12px; border-radius: 100px;
+  cursor: pointer; transition: background .15s, color .15s;
+  letter-spacing: .04em;
+}
+.gen-sug:hover { background: rgba(212,66,10,.2); border-color: var(--accent); color: #fff; }
+
+.stream-status {
+  background: var(--ink2); border-bottom: 1px solid rgba(255,255,255,.06);
+  padding: 24px 32px; min-height: 120px;
+}
+.stream-inner { max-width: 1400px; margin: 0 auto; display: flex; gap: 16px; align-items: flex-start; }
+.stream-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--accent); flex-shrink: 0; margin-top: 4px;
+  animation: pulse 1s infinite;
+}
+.stream-steps { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.stream-step-item {
+  font-family: var(--mono); font-size: 12px;
+  color: rgba(255,255,255,.4); letter-spacing: .04em;
+  animation: fadeIn .3s ease forwards;
+}
+
+.key-stats-row {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 10px; margin: 16px 0;
+}
+.key-stat {
+  background: var(--paper2); border-radius: var(--radius);
+  border: 1px solid var(--border); padding: 12px 14px; text-align: center;
+}
+.ks-val { font-family: var(--serif); font-size: 20px; color: var(--accent); margin-bottom: 2px; }
+.ks-label { font-size: 11px; font-weight: 600; color: var(--ink); margin-bottom: 2px; font-family: var(--sans); }
+.ks-ctx { font-size: 10px; color: var(--ink3); font-family: var(--mono); }
+
+.sent-reasoning {
+  font-size: 12px; color: var(--ink3); font-style: italic;
+  font-family: var(--serif); padding: 10px 14px;
+  background: var(--paper2); border-radius: 6px; margin: 10px 0;
+  border-left: 3px solid var(--border2);
+}
+
+.disc-empty {
+  text-align: center; padding: 32px 16px;
+  font-size: 13px; color: var(--ink3); font-family: var(--sans);
+  line-height: 1.6;
+}
+
+.hidden { display: none !important; }
