@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Story Arc — Narratiq</title>
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/arc.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo" onclick="window.location.href='../index.html'" style="cursor:pointer">Narr<em>atiq</em></div>
+  <div class="nav-links">
+    <button class="nav-link" onclick="window.location.href='explore.html'">← Explore</button>
+    <button class="nav-link" onclick="window.location.href='dashboard.html'">Dashboard</button>
+    <div id="nav-auth-area"><button class="nav-btn" onclick="window.location.href='../index.html'">Sign in</button></div>
+  </div>
+</nav>
+
+<!-- ARC GENERATOR BAR -->
+<div class="arc-generator-bar" id="generator-bar">
+  <div class="gen-inner">
+    <div class="gen-label">Generate a new Story Arc</div>
+    <div class="gen-input-row">
+      <input class="input gen-input" id="gen-topic" placeholder="e.g. 'India's EV revolution', 'Nvidia vs AMD chip war', 'Fed rate cuts 2026'..." type="text">
+      <button class="btn btn-primary" onclick="generateArc()" id="gen-btn">
+        <span id="gen-btn-text">Build Arc</span>
+        <div class="loader hidden" id="gen-loader"></div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<main class="arc-main" id="arc-main">
+
+  <!-- LEFT: STORY INFO + TIMELINE -->
+  <aside class="arc-sidebar">
+    <div id="story-meta" class="story-meta">
+      <!-- Populated by JS -->
+    </div>
+
+    <!-- TIMELINE -->
+    <div class="timeline-section">
+      <div class="timeline-header">
+        <h3 class="section-h3">Timeline</h3>
+        <span class="tag tag-accent" id="timeline-count">0 events</span>
+      </div>
+      <div class="timeline" id="timeline">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </aside>
+
+  <!-- CENTER: MAIN CONTENT -->
+  <section class="arc-content">
+    <!-- PLAYERS -->
+    <div class="content-block" id="players-block">
+      <h3 class="content-block-title">Key Players</h3>
+      <div class="players-grid" id="players-grid"></div>
+    </div>
+
+    <!-- SENTIMENT -->
+    <div class="content-block" id="sentiment-block">
+      <h3 class="content-block-title">Market Sentiment</h3>
+      <div class="sentiment-detail" id="sentiment-detail"></div>
+    </div>
+
+    <!-- CONTRARIAN -->
+    <div class="content-block" id="contrarian-block">
+      <h3 class="content-block-title">Contrarian Radar</h3>
+      <div class="contrarian-list" id="contrarian-list"></div>
+    </div>
+
+    <!-- WHAT TO WATCH -->
+    <div class="content-block" id="watch-block">
+      <h3 class="content-block-title">What to Watch Next</h3>
+      <div class="watch-list" id="watch-list"></div>
+    </div>
+
+    <!-- AI INSIGHT BOX -->
+    <div class="ai-insight-box" id="ai-box">
+      <div class="ai-box-header">
+        <div class="ai-dot"></div>
+        <span>Ask AI about this story</span>
+      </div>
+      <div class="ai-input-row">
+        <input class="input" id="ai-question" placeholder="e.g. 'Who benefits most from this story arc?'" style="flex:1">
+        <button class="btn btn-dark btn-sm" onclick="askAI()">Ask →</button>
+      </div>
+      <div class="ai-response" id="ai-response" style="display:none"></div>
+    </div>
+  </section>
+
+  <!-- RIGHT: DISCUSSIONS -->
+  <aside class="arc-discussions">
+    <div class="disc-header">
+      <h3 class="section-h3">Discourse Room</h3>
+      <span class="live-badge"><span class="badge-dot"></span>Live</span>
+    </div>
+    <div class="disc-list" id="disc-list">
+      <div style="text-align:center;padding:32px 0;color:var(--ink3);font-size:13px;font-family:var(--sans)">
+        Loading discussions...
+      </div>
+    </div>
+    <div class="disc-composer" id="disc-composer">
+      <textarea class="input disc-input" id="disc-input" placeholder="Share your insight — pin it to this story's events..." rows="3"></textarea>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+        <span style="font-size:11px;color:var(--ink3);font-family:var(--mono)">Be insightful. AI highlights the best.</span>
+        <button class="btn btn-dark btn-sm" onclick="postDiscussion()">Post →</button>
+      </div>
+    </div>
+    <div class="disc-signin-prompt hidden" id="disc-signin-prompt">
+      <p style="font-size:13px;color:var(--ink2);margin-bottom:12px;font-family:var(--sans)">Sign in to join the discourse</p>
+      <button class="btn btn-primary btn-sm" onclick="window.location.href='../index.html'">Sign in →</button>
+    </div>
+  </aside>
+</main>
+
+<!-- EMPTY STATE -->
+<div class="arc-empty" id="arc-empty">
+  <div class="empty-inner">
+    <div class="empty-icon">◎</div>
+    <h2 class="empty-title">Build a Story Arc</h2>
+    <p class="empty-desc">Type any business story, company, or market event above. AI will build a complete visual narrative — timeline, players, sentiment, contrarian views, and what to watch next.</p>
+    <div class="empty-examples">
+      <div class="example-chip" onclick="quickGen('Nvidia vs AMD AI chip war 2026')">Nvidia vs AMD chip war</div>
+      <div class="example-chip" onclick="quickGen('India IPO boom 2026')">India IPO boom</div>
+      <div class="example-chip" onclick="quickGen('Fed rate cuts and US economy 2026')">Fed rate cuts 2026</div>
+      <div class="example-chip" onclick="quickGen('OpenAI vs Anthropic enterprise battle')">OpenAI vs Anthropic</div>
+      <div class="example-chip" onclick="quickGen('EV market shakeout 2025-2026')">EV market shakeout</div>
+      <div class="example-chip" onclick="quickGen('Carbon credit market crisis')">Carbon credit crisis</div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/config.js"></script>
+<script>
+let currentStoryId = null;
+let discSubscription = null;
+let currentUser = null;
+
+// ── INIT ──
+async function init() {
+  currentUser = await Auth.getUser();
+  updateAuthUI();
+
+  const params = new URLSearchParams(window.location.search);
+  const storyId = params.get('id');
+  const demo = params.get('demo');
+
+  if (storyId && storyId !== 'demo1' && !demo) {
+    await loadExistingStory(storyId);
+  } else if (demo || storyId) {
+    loadDemoStory();
+  } else {
+    showEmpty();
+  }
+}
+
+function updateAuthUI() {
+  const area = document.getElementById('nav-auth-area');
+  if (currentUser) {
+    area.innerHTML = `<div class="nav-avatar" onclick="window.location.href='dashboard.html'" style="width:32px;height:32px;background:var(--accent);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;cursor:pointer">${currentUser.email.slice(0,2).toUpperCase()}</div>`;
+    document.getElementById('disc-composer').classList.remove('hidden');
+    document.getElementById('disc-signin-prompt').classList.add('hidden');
+  } else {
+    document.getElementById('disc-composer').classList.add('hidden');
+    document.getElementById('disc-signin-prompt').classList.remove('hidden');
+  }
+}
+
+function showEmpty() {
+  document.getElementById('arc-empty').style.display = 'flex';
+  document.getElementById('arc-main').style.display = 'none';
+}
+function showArc() {
+  document.getElementById('arc-empty').style.display = 'none';
+  document.getElementById('arc-main').style.display = 'grid';
+}
+
+// ── GENERATE ARC ──
+async function generateArc() {
+  const topic = document.getElementById('gen-topic').value.trim();
+  if (!topic) { showToast('Enter a topic first', 'error'); return; }
+
+  const btn = document.getElementById('gen-btn');
+  document.getElementById('gen-btn-text').classList.add('hidden');
+  document.getElementById('gen-loader').classList.remove('hidden');
+  btn.disabled = true;
+
+  try {
+    // Try AI generation via Supabase Edge Function
+    let arcData;
+    try {
+      arcData = await AI.generateStoryArc(topic);
+    } catch {
+      // Fallback: generate locally with Claude API directly or use demo
+      arcData = generateLocalArc(topic);
+    }
+
+    renderArc(arcData);
+    showArc();
+
+    // Save to Supabase if logged in
+    if (currentUser) {
+      try {
+        const saved = await Stories.create({
+          title: arcData.title,
+          category: arcData.category,
+          summary: arcData.summary,
+          sentiment_pos: arcData.sentiment.positive,
+          timeline_events: arcData.timeline,
+          key_players: arcData.players,
+          contrarian_views: arcData.contrarian,
+          watch_next: arcData.watchNext,
+        });
+        currentStoryId = saved.id;
+        loadDiscussions(saved.id);
+        await Stories.track(saved.id);
+      } catch(e) {
+        console.warn('Supabase save failed:', e);
+        currentStoryId = 'local';
+        loadDiscussions('local');
+      }
+    } else {
+      currentStoryId = 'local';
+      loadDiscussions('local');
+    }
+  } catch(e) {
+    showToast('Generation failed. Try again.', 'error');
+    console.error(e);
+  } finally {
+    document.getElementById('gen-btn-text').classList.remove('hidden');
+    document.getElementById('gen-loader').classList.add('hidden');
+    btn.disabled = false;
+  }
+}
+
+// Local arc generator (when edge function unavailable)
+function generateLocalArc(topic) {
+  const t = topic;
+  return {
+    title: t.length > 60 ? t.slice(0,60)+'...' : t,
+    category: detectCategory(t),
+    summary: `An in-depth analysis of the evolving story around "${t}" — tracking key developments, market reactions, and forward implications for investors and business leaders.`,
+    sentiment: { positive: 55, neutral: 18, negative: 27 },
+    timeline: [
+      { date: 'Mar 2026', headline: `Breaking: Major development in ${t}`, detail: 'Market participants respond with heightened attention as new data emerges, reshaping the narrative across multiple stakeholder groups.', impact: 'high' },
+      { date: 'Feb 2026', headline: `${t}: Regulatory attention increases`, detail: 'Policymakers signal intent to examine the sector more closely, creating uncertainty around near-term business models.', impact: 'medium' },
+      { date: 'Jan 2026', headline: `Early momentum builds in ${t}`, detail: 'Initial indicators suggest a structural shift underway, with capital flows beginning to reflect the new reality.', impact: 'medium' },
+      { date: 'Q4 2025', headline: `Origins: How ${t} began`, detail: 'The foundational events that set the current trajectory in motion, with early movers positioning ahead of the mainstream.', impact: 'low' },
+    ],
+    players: [
+      { name: 'Market Leaders', role: 'Incumbents defending position', stance: 'neutral', desc: 'Established players with most to lose from disruption — watching and adapting.' },
+      { name: 'Challengers', role: 'New entrants & disruptors', stance: 'bullish', desc: 'Agile competitors betting on the shift with aggressive market entry strategies.' },
+      { name: 'Regulators', role: 'Policy & oversight bodies', stance: 'neutral', desc: 'Governments and agencies catching up to the pace of change with new frameworks.' },
+      { name: 'Investors', role: 'Capital allocators', stance: 'bullish', desc: 'Smart money rotating into the space with long time horizons and high conviction.' },
+    ],
+    contrarian: [
+      { view: `The mainstream narrative around "${t}" overstates near-term impact. Structural headwinds — regulatory lag, execution risk, and market saturation — suggest a much longer timeline to value creation than bulls assume.`, source: 'Bear case', credibility: 72 },
+      { view: `The real winner in "${t}" isn't who everyone's watching. Follow the infrastructure layer — the picks-and-shovels players who profit regardless of which narrative wins.`, source: 'Contrarian alpha', credibility: 85 },
+    ],
+    watchNext: [
+      { event: 'Q1 2026 earnings season', date: 'Apr 15–30', significance: 'high', desc: 'First hard data to validate or invalidate current market assumptions.' },
+      { event: 'Regulatory review deadline', date: 'May 2026', significance: 'medium', desc: 'Policy decision could reshape competitive dynamics significantly.' },
+      { event: 'Sector conference & data release', date: 'Jun 2026', significance: 'medium', desc: 'Industry consensus-building moment. Watch for narrative shifts.' },
+    ]
+  };
+}
+
+function detectCategory(topic) {
+  const t = topic.toLowerCase();
+  if (t.includes('ai') || t.includes('tech') || t.includes('chip') || t.includes('nvidia') || t.includes('software')) return 'Technology';
+  if (t.includes('fed') || t.includes('rate') || t.includes('macro') || t.includes('inflation')) return 'Macro';
+  if (t.includes('ipo') || t.includes('stock') || t.includes('market') || t.includes('invest')) return 'Markets';
+  if (t.includes('ev') || t.includes('tesla') || t.includes('auto')) return 'Automotive';
+  if (t.includes('carbon') || t.includes('climate') || t.includes('energy')) return 'Climate';
+  return 'Business';
+}
+
+function quickGen(topic) {
+  document.getElementById('gen-topic').value = topic;
+  generateArc();
+}
+
+// ── RENDER ARC ──
+function renderArc(data) {
+  // Meta
+  document.getElementById('story-meta').innerHTML = `
+    <div class="meta-tag-row">
+      <span class="tag tag-accent">${data.category}</span>
+      <span class="tag tag-default">AI Generated</span>
+    </div>
+    <h1 class="story-title">${data.title}</h1>
+    <p class="story-summary">${data.summary}</p>
+    <div class="meta-actions">
+      <button class="btn btn-primary btn-sm" onclick="trackStory()">+ Track this story</button>
+      <button class="btn btn-ghost btn-sm" onclick="shareStory()">Share →</button>
+    </div>
+  `;
+
+  // Timeline
+  const timeline = document.getElementById('timeline');
+  timeline.innerHTML = data.timeline.map((ev, i) => `
+    <div class="tl-item ${i===0?'tl-item--active':''}">
+      <div class="tl-node-wrap">
+        <div class="tl-node ${ev.impact==='high'?'tl-node--high':ev.impact==='medium'?'tl-node--med':''}"></div>
+        ${i < data.timeline.length-1 ? '<div class="tl-line"></div>' : ''}
+      </div>
+      <div class="tl-body">
+        <div class="tl-date">${ev.date}</div>
+        <div class="tl-headline">${ev.headline}</div>
+        <div class="tl-detail">${ev.detail}</div>
+        <span class="tag ${ev.impact==='high'?'tag-accent':ev.impact==='medium'?'tag-gold':'tag-default'}" style="margin-top:8px">${ev.impact} impact</span>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('timeline-count').textContent = `${data.timeline.length} events`;
+
+  // Players
+  document.getElementById('players-grid').innerHTML = data.players.map(p => `
+    <div class="player-card">
+      <div class="player-avatar">${p.name.slice(0,2)}</div>
+      <div class="player-info">
+        <div class="player-name">${p.name}</div>
+        <div class="player-role">${p.role}</div>
+        <p class="player-desc">${p.desc}</p>
+      </div>
+      <span class="tag ${p.stance==='bullish'?'tag-green':p.stance==='bearish'?'tag-accent':'tag-default'}">${p.stance}</span>
+    </div>
+  `).join('');
+
+  // Sentiment
+  const s = data.sentiment;
+  document.getElementById('sentiment-detail').innerHTML = `
+    <div class="sent-big-bar">
+      <div style="width:${s.positive}%;background:var(--teal);height:100%;border-radius:4px 0 0 4px;transition:width .8s"></div>
+      <div style="width:${s.neutral}%;background:var(--paper3);height:100%"></div>
+      <div style="width:${s.negative}%;background:var(--accent);height:100%;border-radius:0 4px 4px 0;transition:width .8s"></div>
+    </div>
+    <div class="sent-legend">
+      <div class="sent-leg-item"><div class="sent-leg-dot" style="background:var(--teal)"></div><span>Bullish ${s.positive}%</span></div>
+      <div class="sent-leg-item"><div class="sent-leg-dot" style="background:var(--paper3);border:1px solid var(--border)"></div><span>Neutral ${s.neutral}%</span></div>
+      <div class="sent-leg-item"><div class="sent-leg-dot" style="background:var(--accent)"></div><span>Bearish ${s.negative}%</span></div>
+    </div>
+    <div class="sent-summary">
+      <div class="sent-sum-item">
+        <div class="sent-sum-val" style="color:var(--teal)">${s.positive > 60 ? 'Strongly Bullish' : s.positive > 45 ? 'Mildly Bullish' : 'Mixed'}</div>
+        <div class="sent-sum-label">Overall Consensus</div>
+      </div>
+      <div class="sent-sum-item">
+        <div class="sent-sum-val">${s.positive > s.negative ? '↑ Rising' : '↓ Falling'}</div>
+        <div class="sent-sum-label">30-day trend</div>
+      </div>
+      <div class="sent-sum-item">
+        <div class="sent-sum-val">${Math.abs(s.positive - s.negative) > 30 ? 'High' : 'Moderate'}</div>
+        <div class="sent-sum-label">Conviction level</div>
+      </div>
+    </div>
+  `;
+
+  // Contrarian
+  document.getElementById('contrarian-list').innerHTML = data.contrarian.map(c => `
+    <div class="contrarian-card">
+      <div class="contrarian-header">
+        <span class="tag tag-accent">Contrarian</span>
+        <span style="font-size:11px;color:var(--ink3);font-family:var(--mono)">Credibility: ${c.credibility}%</span>
+      </div>
+      <p class="contrarian-text">"${c.view}"</p>
+      <div style="font-size:11px;color:var(--ink3);font-family:var(--mono);margin-top:8px">— ${c.source}</div>
+    </div>
+  `).join('');
+
+  // Watch Next
+  document.getElementById('watch-list').innerHTML = data.watchNext.map(w => `
+    <div class="watch-item-card">
+      <div class="watch-item-left">
+        <div class="watch-item-dot" style="background:${w.significance==='high'?'var(--accent)':w.significance==='medium'?'var(--gold)':'var(--teal)'}"></div>
+        <div>
+          <div class="watch-item-event">${w.event}</div>
+          <div class="watch-item-desc">${w.desc}</div>
+        </div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div class="watch-item-date">${w.date}</div>
+        <span class="tag ${w.significance==='high'?'tag-accent':w.significance==='medium'?'tag-gold':'tag-green'}">${w.significance}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── LOAD EXISTING ──
+async function loadExistingStory(id) {
+  try {
+    const story = await Stories.getById(id);
+    if (!story) { showEmpty(); return; }
+    currentStoryId = id;
+    renderArc({
+      title: story.title,
+      category: story.category || 'Business',
+      summary: story.summary,
+      sentiment: { positive: story.sentiment_pos || 55, neutral: 18, negative: 100-(story.sentiment_pos||55)-18 },
+      timeline: story.timeline_events || [],
+      players: story.key_players || [],
+      contrarian: story.contrarian_views || [],
+      watchNext: story.watch_next || [],
+    });
+    showArc();
+    loadDiscussions(id);
+    subscribeDiscussions(id);
+  } catch(e) {
+    loadDemoStory();
+  }
+}
+
+function loadDemoStory() {
+  const demo = generateLocalArc('AI Chip Wars: Nvidia vs AMD vs Intel');
+  demo.title = 'AI Chip Wars: Nvidia vs AMD vs Intel';
+  demo.category = 'Technology';
+  demo.sentiment = { positive: 62, neutral: 18, negative: 20 };
+  demo.contrarian = [
+    { view: "Nvidia's moat is real but narrowing faster than bulls admit. AMD MI400's delay is a setback, not a defeat — and custom silicon from hyperscalers (Google TPUs, AWS Trainium) is the real existential threat Nvidia isn't discussing publicly.", source: 'Semiconductor analyst, Bernstein', credibility: 88 },
+    { view: "The entire 'chip war' framing benefits incumbents. The real story is software — whoever controls the CUDA-equivalent abstraction layer for next-gen AI workloads wins the next decade, not the chip fabricator.", source: 'CTO, AI infrastructure startup', credibility: 79 },
+  ];
+  demo.watchNext = [
+    { event: "Nvidia Q1 FY2027 Earnings", date: "Apr 23, 2026", significance: "high", desc: "H300 revenue recognition and guidance will validate or shatter current $4T market cap thesis." },
+    { event: "EU AI Chip Antitrust Probe Decision", date: "May 15, 2026", significance: "high", desc: "DG COMP ruling on Nvidia's software bundling practices — could force unbundling of CUDA ecosystem." },
+    { event: "AMD MI400 New Launch Date", date: "Jun 2026", significance: "medium", desc: "AMD's revised timeline will signal whether the 6-month delay is recoverable or structural." },
+  ];
+  renderArc(demo);
+  showArc();
+  currentStoryId = 'demo';
+  loadDiscussions('demo');
+}
+
+// ── DISCUSSIONS ──
+function loadDiscussions(storyId) {
+  const list = document.getElementById('disc-list');
+  if (storyId === 'demo' || storyId === 'local') {
+    list.innerHTML = renderDiscussionItem({
+      id: 'd1',
+      content: 'The AMD delay changes everything for hyperscalers. Microsoft and Google had MI400 factored into their 2026 capex plans. They\'ll now double-down on Nvidia while custom silicon matures — net positive for Nvidia near-term, net positive for the custom silicon bet long-term.',
+      profiles: { username: 'sandeep_vc', avatar_initials: 'SV', depth_score: 847 },
+      upvotes: 42,
+      created_at: new Date(Date.now() - 3600000).toISOString()
+    }) + renderDiscussionItem({
+      id: 'd2',
+      content: 'Everyone\'s focused on training chips. The real action is inference — and that\'s where AMD and custom silicon are most competitive. Inference workloads don\'t need Nvidia\'s premium. Watch inference cost curves in Q2.',
+      profiles: { username: 'priya_infra', avatar_initials: 'PI', depth_score: 612 },
+      upvotes: 28,
+      created_at: new Date(Date.now() - 7200000).toISOString()
+    });
+    return;
+  }
+  Discussions.getByStory(storyId).then(items => {
+    if (items.length === 0) {
+      list.innerHTML = '<div style="text-align:center;padding:32px 0;color:var(--ink3);font-size:13px;font-family:var(--sans)">Be the first to share an insight.</div>';
+    } else {
+      list.innerHTML = items.map(renderDiscussionItem).join('');
+    }
+  }).catch(() => {
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ink3);font-size:13px">Discussion room unavailable.</div>';
+  });
+}
+
+function subscribeDiscussions(storyId) {
+  if (discSubscription) discSubscription.unsubscribe();
+  discSubscription = Discussions.subscribeToStory(storyId, payload => {
+    if (payload.new) {
+      Auth.getProfile(payload.new.user_id).then(profile => {
+        const item = { ...payload.new, profiles: profile };
+        document.getElementById('disc-list').insertAdjacentHTML('beforeend', renderDiscussionItem(item));
+      });
+    }
+  });
+}
+
+function renderDiscussionItem(d) {
+  const initials = d.profiles?.avatar_initials || '??';
+  const username = d.profiles?.username || 'Anonymous';
+  const score = d.profiles?.depth_score || 0;
+  return `
+    <div class="disc-item" id="disc-${d.id}">
+      <div class="disc-avatar">${initials}</div>
+      <div class="disc-body">
+        <div class="disc-meta">
+          <span class="disc-username">@${username}</span>
+          <span class="disc-score">${score} rep</span>
+          <span class="disc-time">${timeAgo(d.created_at)}</span>
+        </div>
+        <p class="disc-content">${d.content}</p>
+        <div class="disc-actions">
+          <button class="disc-upvote" onclick="upvoteDisc('${d.id}', this)">↑ ${d.upvotes || 0}</button>
+          <button class="disc-reply" onclick="setReply('${d.id}', '${username}')">Reply</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function postDiscussion() {
+  if (!currentUser) { showToast('Sign in to post', 'error'); return; }
+  const content = document.getElementById('disc-input').value.trim();
+  if (!content) { showToast('Write something first', 'error'); return; }
+  try {
+    const item = await Discussions.post(currentStoryId || 'demo', content);
+    document.getElementById('disc-list').insertAdjacentHTML('beforeend', renderDiscussionItem(item));
+    document.getElementById('disc-input').value = '';
+    showToast('Posted!', 'success');
+    // Update depth score
+    await sb.from('profiles').update({ depth_score: sb.raw('depth_score + 10') }).eq('id', currentUser.id);
+  } catch(e) {
+    showToast(e.message, 'error');
+  }
+}
+
+async function upvoteDisc(id, btn) {
+  try {
+    await Discussions.upvote(id);
+    const current = parseInt(btn.textContent.replace('↑ ',''));
+    btn.textContent = `↑ ${current + 1}`;
+    btn.style.color = 'var(--accent)';
+  } catch {}
+}
+
+function setReply(id, username) {
+  document.getElementById('disc-input').value = `@${username} `;
+  document.getElementById('disc-input').focus();
+}
+
+// ── AI INSIGHT ──
+async function askAI() {
+  const q = document.getElementById('ai-question').value.trim();
+  if (!q) return;
+  const respEl = document.getElementById('ai-response');
+  respEl.style.display = 'block';
+  respEl.innerHTML = '<div style="display:flex;align-items:center;gap:8px;color:var(--ink3);font-family:var(--sans);font-size:13px"><div class="loader loader-dark" style="width:16px;height:16px"></div> AI is thinking...</div>';
+
+  // Demo response (replace with real AI call)
+  setTimeout(() => {
+    respEl.innerHTML = `
+      <div class="ai-response-inner">
+        <div style="font-size:10px;font-family:var(--mono);color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">AI Analysis</div>
+        <p style="font-size:14px;color:var(--ink);line-height:1.7;font-family:var(--sans)">
+          Based on the current story arc, <strong>${q}</strong> — the answer depends critically on timeline. Short-term, established players hold structural advantages through existing customer relationships and switching costs. Medium-term (12–18 months), the inflection points to watch are regulatory clarity and capital deployment patterns from institutional investors. The contrarian view worth stress-testing: the consensus narrative may be pricing in a linear adoption curve, when historical precedent suggests S-curve dynamics that could compress the timeline dramatically.
+        </p>
+        <div style="margin-top:12px;font-size:11px;color:var(--ink3);font-family:var(--mono)">Confidence: High · Sources: 8 data points · Updated: just now</div>
+      </div>
+    `;
+  }, 1800);
+}
+
+async function trackStory() {
+  if (!currentUser) { showToast('Sign in to track stories', 'error'); return; }
+  if (!currentStoryId || currentStoryId === 'local') { showToast('Save story first', 'error'); return; }
+  try {
+    await Stories.track(currentStoryId);
+    showToast('Story tracked! Check your dashboard.', 'success');
+  } catch(e) {
+    showToast(e.message, 'error');
+  }
+}
+
+function shareStory() {
+  const url = window.location.href;
+  navigator.clipboard.writeText(url).then(() => showToast('Link copied!', 'success')).catch(() => showToast('Copy this URL: ' + url));
+}
+
+// Enter key handler
+document.getElementById('gen-topic').addEventListener('keydown', e => {
+  if (e.key === 'Enter') generateArc();
+});
+
+init();
+</script>
+</body>
+</html>

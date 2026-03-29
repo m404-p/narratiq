@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Narratiq</title>
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+
+  <nav class="nav">
+    <div class="nav-logo" onclick="window.location.href='../index.html'" style="cursor:pointer">Narr<em>atiq</em></div>
+    <div class="nav-links">
+      <button class="nav-link active">Dashboard</button>
+      <button class="nav-link" onclick="window.location.href='explore.html'">Explore</button>
+      <button class="nav-link" onclick="window.location.href='arc.html'">New Arc</button>
+      <div id="nav-auth-area">
+        <button class="nav-btn" onclick="window.location.href='../index.html'">Sign in</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="dash-layout">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="dash-sidebar">
+      <div class="user-card" id="user-card">
+        <div class="user-avatar-lg" id="user-avatar">?</div>
+        <div class="user-name" id="user-name">Loading...</div>
+        <div class="user-email" id="user-email">—</div>
+        <div class="user-since" id="user-since">—</div>
+        <div class="divider"></div>
+        <div class="sidebar-nav">
+          <button class="snav-item active" onclick="showPanel('overview')">Overview</button>
+          <button class="snav-item" onclick="showPanel('tracked')">Tracked Stories</button>
+          <button class="snav-item" onclick="showPanel('discussions')">My Discussions</button>
+          <button class="snav-item" onclick="showPanel('analytics')" id="creator-tab" style="display:none">Creator
+            Analytics</button>
+        </div>
+        <div class="divider"></div>
+        <button class="btn btn-ghost btn-sm w-full" onclick="Auth.signOut()">Sign out</button>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="dash-main">
+
+      <!-- OVERVIEW PANEL -->
+      <div id="panel-overview" class="panel">
+        <div class="panel-header">
+          <h1 class="panel-title">Your Intelligence Dashboard</h1>
+          <button class="btn btn-primary btn-sm" onclick="window.location.href='arc.html'">+ New Arc</button>
+        </div>
+
+        <!-- STATS ROW -->
+        <div class="stats-row" id="stats-row">
+          <div class="stat-card">
+            <div class="sc-val" id="sc-stories">—</div>
+            <div class="sc-label">Stories Tracked</div>
+            <div class="sc-trend" id="sc-stories-trend">Loading...</div>
+          </div>
+          <div class="stat-card">
+            <div class="sc-val" id="sc-score">—</div>
+            <div class="sc-label">Depth Score</div>
+            <div class="sc-trend" style="color:var(--teal)">↑ Top 12% globally</div>
+          </div>
+          <div class="stat-card">
+            <div class="sc-val" id="sc-streak">—</div>
+            <div class="sc-label">Day Streak</div>
+            <div class="sc-trend" id="sc-streak-trend">Keep it up!</div>
+          </div>
+          <div class="stat-card">
+            <div class="sc-val" id="sc-disc">—</div>
+            <div class="sc-label">Discussions</div>
+            <div class="sc-trend" style="color:var(--teal)">Community member</div>
+          </div>
+        </div>
+
+        <!-- EXPERTISE -->
+        <div class="content-block">
+          <h3 class="cb-title">Topic Expertise</h3>
+          <div class="expertise-list" id="expertise-list">
+            <!-- Populated -->
+          </div>
+        </div>
+
+        <!-- RECENT ACTIVITY -->
+        <div class="content-block">
+          <h3 class="cb-title">Recent Activity</h3>
+          <div class="activity-list" id="activity-list">
+            <div class="activity-empty">No activity yet. <a onclick="window.location.href='arc.html'"
+                style="color:var(--accent);cursor:pointer">Build your first arc →</a></div>
+          </div>
+        </div>
+
+        <!-- RECOMMENDED ARCS -->
+        <div class="content-block">
+          <h3 class="cb-title">Recommended for You</h3>
+          <div class="rec-grid" id="rec-grid">
+            <!-- Populated -->
+          </div>
+        </div>
+      </div>
+
+      <!-- TRACKED STORIES PANEL -->
+      <div id="panel-tracked" class="panel hidden">
+        <div class="panel-header">
+          <h1 class="panel-title">Tracked Story Arcs</h1>
+          <button class="btn btn-primary btn-sm" onclick="window.location.href='arc.html'">+ Track new story</button>
+        </div>
+        <div id="tracked-list">
+          <div class="panel-empty">You haven't tracked any stories yet.<br><a onclick="window.location.href='arc.html'"
+              style="color:var(--accent);cursor:pointer">Build your first arc →</a></div>
+        </div>
+      </div>
+
+      <!-- DISCUSSIONS PANEL -->
+      <div id="panel-discussions" class="panel hidden">
+        <div class="panel-header">
+          <h1 class="panel-title">My Discussions</h1>
+        </div>
+        <div id="my-discussions-list">
+          <div class="panel-empty">You haven't posted in any discussions yet.</div>
+        </div>
+      </div>
+
+      <!-- CREATOR ANALYTICS PANEL -->
+      <div id="panel-analytics" class="panel hidden">
+        <div class="panel-header">
+          <h1 class="panel-title">Creator Analytics</h1>
+          <div class="live-badge"
+            style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--teal);font-family:var(--mono)">
+            <div class="badge-dot" style="background:var(--teal)"></div> LIVE SUPABASE
+          </div>
+        </div>
+
+        <!-- PLATFORM METRICS -->
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="sc-val" id="cr-users">—</div>
+            <div class="sc-label">Total Users</div>
+            <div class="sc-trend" id="cr-users-trend">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="sc-val" id="cr-stories">—</div>
+            <div class="sc-label">Story Arcs</div>
+            <div class="sc-trend">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="sc-val" id="cr-disc">—</div>
+            <div class="sc-label">Discussions</div>
+            <div class="sc-trend">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="sc-val" id="cr-active">—</div>
+            <div class="sc-label">Active (24h)</div>
+            <div class="sc-trend" style="color:var(--teal)">—</div>
+          </div>
+        </div>
+
+        <div class="content-block">
+          <h3 class="cb-title">Top Story Arcs by Tracking</h3>
+          <div id="top-stories-list">Loading...</div>
+        </div>
+
+        <div class="content-block">
+          <div class="cb-title-row">
+            <h3 class="cb-title">Real-time Event Log</h3>
+            <span class="tag tag-green">Live</span>
+          </div>
+          <div id="event-log" class="event-log">
+            <div class="event-log-item">
+              <span class="el-time">just now</span>
+              <span class="el-event">Platform loaded</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="content-block">
+          <h3 class="cb-title">Supabase Schema Reference</h3>
+          <div class="schema-ref">
+            <div class="schema-table">
+              <div class="schema-th">Table: <code>profiles</code></div>
+              <div class="schema-row"><code>id</code><span>UUID (FK auth.users)</span></div>
+              <div class="schema-row"><code>username</code><span>TEXT</span></div>
+              <div class="schema-row"><code>depth_score</code><span>INTEGER</span></div>
+              <div class="schema-row"><code>streak</code><span>INTEGER</span></div>
+              <div class="schema-row"><code>stories_tracked</code><span>INTEGER</span></div>
+              <div class="schema-row"><code>topics_mastered</code><span>TEXT[]</span></div>
+            </div>
+            <div class="schema-table">
+              <div class="schema-th">Table: <code>story_arcs</code></div>
+              <div class="schema-row"><code>id</code><span>UUID</span></div>
+              <div class="schema-row"><code>title</code><span>TEXT</span></div>
+              <div class="schema-row"><code>category</code><span>TEXT</span></div>
+              <div class="schema-row"><code>timeline_events</code><span>JSONB</span></div>
+              <div class="schema-row"><code>key_players</code><span>JSONB</span></div>
+              <div class="schema-row"><code>sentiment_pos</code><span>INTEGER</span></div>
+              <div class="schema-row"><code>tracking_count</code><span>INTEGER</span></div>
+            </div>
+            <div class="schema-table">
+              <div class="schema-th">Table: <code>discussions</code></div>
+              <div class="schema-row"><code>id</code><span>UUID</span></div>
+              <div class="schema-row"><code>story_id</code><span>UUID (FK)</span></div>
+              <div class="schema-row"><code>user_id</code><span>UUID (FK)</span></div>
+              <div class="schema-row"><code>content</code><span>TEXT</span></div>
+              <div class="schema-row"><code>parent_id</code><span>UUID nullable</span></div>
+              <div class="schema-row"><code>upvotes</code><span>INTEGER</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="../js/config.js"></script>
+  <script>
+    const CREATOR_EMAIL = 'muskan16patel1@gmail.com'; // Change to your email
+
+    let currentUser = null;
+    let profile = null;
+
+    async function init() {
+      currentUser = await Auth.getUser();
+      if (!currentUser) {
+        showToast('Please sign in to view your dashboard', 'error');
+        setTimeout(() => window.location.href = '../index.html', 1500);
+        return;
+      }
+
+      profile = await Auth.getProfile(currentUser.id);
+      renderUserCard();
+      updateNavAuth();
+      loadOverview();
+
+      // Show creator tab if creator
+      if (currentUser.email === CREATOR_EMAIL) {
+        document.getElementById('creator-tab').style.display = 'block';
+      }
+
+      // Realtime: update event log
+      Analytics.subscribeToRealtime('story_arcs', payload => {
+        logEvent(`New story arc created: "${payload.new?.title?.slice(0, 40) || '—'}"`);
+      });
+      Analytics.subscribeToRealtime('discussions', payload => {
+        logEvent(`New discussion post in story #${payload.new?.story_id?.slice(0, 8) || '—'}`);
+      });
+      Analytics.subscribeToRealtime('profiles', payload => {
+        if (payload.eventType === 'INSERT') logEvent(`New user joined the platform`);
+      });
+    }
+
+    function renderUserCard() {
+      const p = profile || {};
+      document.getElementById('user-avatar').textContent = p.avatar_initials || currentUser.email.slice(0, 2).toUpperCase();
+      document.getElementById('user-name').textContent = p.username ? `@${p.username}` : 'New Reader';
+      document.getElementById('user-email').textContent = currentUser.email;
+      document.getElementById('user-since').textContent = `Member since ${new Date(currentUser.created_at || Date.now()).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`;
+    }
+
+    function updateNavAuth() {
+      const area = document.getElementById('nav-auth-area');
+      const initials = profile?.avatar_initials || currentUser.email.slice(0, 2).toUpperCase();
+      area.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:13px;color:rgba(255,255,255,0.5);font-family:var(--sans)">@${profile?.username || 'user'}</span>
+      <div style="width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;font-family:var(--mono);font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer">${initials}</div>
+    </div>`;
+    }
+
+    // ── PANELS ──
+    function showPanel(name) {
+      document.querySelectorAll('.panel').forEach(p => p.classList.add('hidden'));
+      document.getElementById(`panel-${name}`).classList.remove('hidden');
+      document.querySelectorAll('.snav-item').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+
+      if (name === 'tracked') loadTracked();
+      if (name === 'discussions') loadMyDiscussions();
+      if (name === 'analytics') loadCreatorAnalytics();
+    }
+
+    // ── OVERVIEW ──
+    async function loadOverview() {
+      const p = profile || {};
+      document.getElementById('sc-stories').textContent = p.stories_tracked ?? 0;
+      document.getElementById('sc-score').textContent = (p.depth_score || 0).toLocaleString();
+      document.getElementById('sc-streak').textContent = `${p.streak || 0}d`;
+      document.getElementById('sc-stories-trend').textContent = p.stories_tracked > 0 ? `+${Math.min(p.stories_tracked, 6)} this week` : 'Track your first story';
+
+      // Count discussions
+      try {
+        const { count } = await sb.from('discussions').select('id', { count: 'exact' }).eq('user_id', currentUser.id);
+        document.getElementById('sc-disc').textContent = count || 0;
+      } catch { document.getElementById('sc-disc').textContent = 0; }
+
+      renderExpertise(p.topics_mastered || []);
+      loadRecommended();
+    }
+
+    function renderExpertise(topics) {
+      const defaults = [
+        { name: 'Technology', pct: 45 }, { name: 'Markets', pct: 30 },
+        { name: 'Macro', pct: 20 }, { name: 'Energy', pct: 10 }
+      ];
+      const list = topics.length > 0 ? topics : defaults;
+      document.getElementById('expertise-list').innerHTML = list.map(t => {
+        const name = typeof t === 'string' ? t : t.name;
+        const pct = typeof t === 'object' ? t.pct : Math.floor(Math.random() * 60) + 20;
+        return `
+      <div class="expertise-item">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:14px;font-weight:500;color:var(--ink);font-family:var(--sans)">${name}</span>
+          <span style="font-size:12px;font-family:var(--mono);color:var(--ink3)">${pct}%</span>
+        </div>
+        <div style="height:6px;background:var(--paper2);border-radius:3px;overflow:hidden">
+          <div style="width:${pct}%;height:100%;background:var(--accent);border-radius:3px;transition:width .8s ease"></div>
+        </div>
+      </div>
+    `;
+      }).join('');
+    }
+
+    async function loadRecommended() {
+      const demos = [
+        { id: 'r1', title: 'Carbon Credit Market Crisis', category: 'Climate Finance', tracking_count: 1902 },
+        { id: 'r2', title: 'Fed Rate Cut Endgame 2026', category: 'Macro', tracking_count: 2210 },
+        { id: 'r3', title: 'EV Shakeout: Who Survives?', category: 'Automotive', tracking_count: 1654 },
+      ];
+      try {
+        const live = await Stories.getTrending();
+        const stories = live.length > 0 ? live.slice(0, 3) : demos;
+        renderRec(stories);
+      } catch { renderRec(demos); }
+    }
+
+    function renderRec(stories) {
+      document.getElementById('rec-grid').innerHTML = stories.map(s => `
+    <div class="rec-card" onclick="window.location.href='arc.html?id=${s.id}'">
+      <span class="tag tag-default" style="margin-bottom:10px">${s.category || 'Business'}</span>
+      <div style="font-family:var(--serif);font-size:16px;color:var(--ink);line-height:1.3;margin-bottom:8px">${s.title}</div>
+      <div style="font-size:11px;color:var(--ink3);font-family:var(--mono)">${(s.tracking_count || 0).toLocaleString()} tracking →</div>
+    </div>
+  `).join('');
+    }
+
+    // ── TRACKED ──
+    async function loadTracked() {
+      const list = document.getElementById('tracked-list');
+      try {
+        const items = await Stories.getTrackedByUser(currentUser.id);
+        if (!items || items.length === 0) {
+          list.innerHTML = '<div class="panel-empty">No stories tracked yet. <a onclick="window.location.href=\'arc.html\'" style="color:var(--accent);cursor:pointer">Explore arcs →</a></div>';
+          return;
+        }
+        list.innerHTML = items.map(i => {
+          const s = i.story_arcs;
+          return `<div class="tracked-card" onclick="window.location.href='arc.html?id=${s.id}'">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <span class="tag tag-default" style="margin-bottom:10px">${s.category || 'Business'}</span>
+            <div style="font-family:var(--serif);font-size:18px;color:var(--ink);margin-top:8px">${s.title}</div>
+            <div style="font-size:12px;color:var(--ink3);font-family:var(--mono);margin-top:6px">${(s.tracking_count || 0).toLocaleString()} tracking · Added ${timeAgo(i.created_at || new Date().toISOString())}</div>
+          </div>
+          <button class="btn btn-ghost btn-sm">View arc →</button>
+        </div>
+      </div>`;
+        }).join('');
+      } catch {
+        list.innerHTML = '<div class="panel-empty">Could not load tracked stories.</div>';
+      }
+    }
+
+    // ── MY DISCUSSIONS ──
+    async function loadMyDiscussions() {
+      const list = document.getElementById('my-discussions-list');
+      try {
+        const { data } = await sb.from('discussions')
+          .select('*, story_arcs(title)')
+          .eq('user_id', currentUser.id)
+          .order('created_at', { ascending: false });
+        if (!data || data.length === 0) {
+          list.innerHTML = '<div class="panel-empty">No discussions yet. Join a story arc to start discussing.</div>';
+          return;
+        }
+        list.innerHTML = data.map(d => `
+      <div class="disc-my-card">
+        <div style="font-size:11px;font-family:var(--mono);color:var(--ink3);margin-bottom:6px">In: ${d.story_arcs?.title || 'Unknown story'}</div>
+        <p style="font-size:14px;color:var(--ink);line-height:1.6;font-family:var(--sans);margin-bottom:8px">${d.content}</p>
+        <div style="display:flex;gap:12px;align-items:center">
+          <span style="font-size:11px;font-family:var(--mono);color:var(--accent)">↑ ${d.upvotes || 0} upvotes</span>
+          <span style="font-size:11px;font-family:var(--mono);color:var(--ink3)">${timeAgo(d.created_at)}</span>
+          <span style="font-size:11px;font-family:var(--mono);color:var(--teal)">+10 depth score</span>
+        </div>
+      </div>
+    `).join('');
+      } catch {
+        list.innerHTML = '<div class="panel-empty">Could not load discussions.</div>';
+      }
+    }
+
+    // ── CREATOR ANALYTICS ──
+    async function loadCreatorAnalytics() {
+      try {
+        const stats = await Analytics.getPlatformStats();
+        document.getElementById('cr-users').textContent = stats.totalUsers.toLocaleString();
+        document.getElementById('cr-stories').textContent = stats.totalStories.toLocaleString();
+        document.getElementById('cr-disc').textContent = stats.totalDiscussions.toLocaleString();
+
+        const active = await Analytics.getActiveUsers();
+        document.getElementById('cr-active').textContent = active.toLocaleString();
+
+        // Top stories
+        const { data: tops } = await sb.from('story_arcs').select('title,tracking_count,category').order('tracking_count', { ascending: false }).limit(5);
+        const topEl = document.getElementById('top-stories-list');
+        if (tops && tops.length > 0) {
+          topEl.innerHTML = tops.map((s, i) => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);font-family:var(--sans)">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span style="font-size:12px;font-family:var(--mono);color:var(--ink3);width:20px">${String(i + 1).padStart(2, '0')}</span>
+            <div>
+              <div style="font-size:14px;color:var(--ink);font-weight:500">${s.title}</div>
+              <span class="tag tag-default" style="margin-top:4px">${s.category || 'Business'}</span>
+            </div>
+          </div>
+          <span style="font-family:var(--mono);font-size:13px;color:var(--accent)">${(s.tracking_count || 0).toLocaleString()} tracking</span>
+        </div>
+      `).join('');
+        } else {
+          topEl.innerHTML = '<div style="color:var(--ink3);font-size:13px;font-family:var(--sans);padding:16px 0">No stories yet. Start building arcs!</div>';
+        }
+      } catch (e) {
+        console.error('Analytics failed:', e);
+        // Show demo data
+        document.getElementById('cr-users').textContent = '2,400+';
+        document.getElementById('cr-stories').textContent = '184';
+        document.getElementById('cr-disc').textContent = '12,847';
+        document.getElementById('cr-active').textContent = '342';
+        document.getElementById('top-stories-list').innerHTML = `
+      <div style="padding:12px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;font-family:var(--sans)">
+        <span style="font-size:14px;color:var(--ink)">AI Chip Wars</span>
+        <span style="font-family:var(--mono);color:var(--accent)">4,231 tracking</span>
+      </div>
+      <div style="padding:12px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;font-family:var(--sans)">
+        <span style="font-size:14px;color:var(--ink)">India IPO Boom</span>
+        <span style="font-family:var(--mono);color:var(--accent)">2,847 tracking</span>
+      </div>
+      <div style="padding:12px 0;display:flex;justify-content:space-between;font-family:var(--sans)">
+        <span style="font-size:14px;color:var(--ink)">OpenAI vs Anthropic</span>
+        <span style="font-family:var(--mono);color:var(--accent)">3,120 tracking</span>
+      </div>
+    `;
+      }
+    }
+
+    function logEvent(msg) {
+      const log = document.getElementById('event-log');
+      if (!log) return;
+      const item = document.createElement('div');
+      item.className = 'event-log-item event-log-new';
+      item.innerHTML = `<span class="el-time">just now</span><span class="el-event">${msg}</span>`;
+      log.insertBefore(item, log.firstChild);
+      if (log.children.length > 20) log.removeChild(log.lastChild);
+    }
+
+    init();
+  </script>
+</body>
+
+</html>

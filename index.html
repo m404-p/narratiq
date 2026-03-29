@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Narratiq — AI-Native Business Intelligence</title>
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/home.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-logo">Narr<em>atiq</em></div>
+  <div class="nav-links">
+    <button class="nav-link" onclick="scrollToSection('features')">Features</button>
+    <button class="nav-link" onclick="scrollToSection('trending')">Trending</button>
+    <button class="nav-link" onclick="window.location.href=\'pages/dashboard.html\'">Dashboard</button>
+    <div id="nav-auth-area">
+      <button class="nav-btn" onclick="openAuth('signin')">Sign in</button>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg">
+    <div class="hero-grid"></div>
+    <div class="hero-glow"></div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-badge animate-up" style="animation-delay:.1s">
+      <span class="badge-dot"></span>
+      AI-Native News Intelligence · 2026
+    </div>
+    <h1 class="hero-title animate-up" style="animation-delay:.2s">
+      Business news that<br>
+      <em>thinks with you</em>
+    </h1>
+    <p class="hero-subtitle animate-up" style="animation-delay:.3s">
+      Track any story as a living arc — interactive timelines, key players mapped, sentiment shifted, contrarian views surfaced, and what to watch next. Not just articles. Intelligence.
+    </p>
+    <div class="hero-actions animate-up" style="animation-delay:.4s">
+      <button class="btn btn-primary" onclick="openAuth('signup')">
+        Start for free →
+      </button>
+      <button class="btn btn-ghost" style="color:#fff;border-color:rgba(255,255,255,0.2)" onclick="window.location.href='pages/arc.html?demo=true'">
+        See a live arc
+      </button>
+    </div>
+    <div class="hero-stats animate-up" style="animation-delay:.5s">
+      <div class="stat-item">
+        <span class="stat-val" id="stat-users">—</span>
+        <span class="stat-label">Readers</span>
+      </div>
+      <div class="stat-sep"></div>
+      <div class="stat-item">
+        <span class="stat-val" id="stat-stories">—</span>
+        <span class="stat-label">Story Arcs</span>
+      </div>
+      <div class="stat-sep"></div>
+      <div class="stat-item">
+        <span class="stat-val" id="stat-discussions">—</span>
+        <span class="stat-label">Discussions</span>
+      </div>
+    </div>
+  </div>
+  <div class="hero-visual animate-up" style="animation-delay:.35s">
+    <div class="arc-preview-card">
+      <div class="apc-header">
+        <div class="apc-dot"></div>
+        <span class="apc-title">AI Chip Wars: Nvidia vs AMD vs Intel</span>
+        <span class="tag tag-accent">Live</span>
+      </div>
+      <div class="apc-timeline">
+        <div class="apc-event active">
+          <div class="apc-event-dot"></div>
+          <div class="apc-event-content">
+            <div class="apc-event-date">Mar 2026</div>
+            <div class="apc-event-text">Nvidia H300 announced — 4× inference speed vs H100. AMD MI400 delayed 6 months.</div>
+          </div>
+        </div>
+        <div class="apc-event">
+          <div class="apc-event-dot"></div>
+          <div class="apc-event-content">
+            <div class="apc-event-date">Jan 2026</div>
+            <div class="apc-event-text">US-China chip export controls tightened. TSMC Osaka fab breaks ground.</div>
+          </div>
+        </div>
+        <div class="apc-event">
+          <div class="apc-event-dot"></div>
+          <div class="apc-event-content">
+            <div class="apc-event-date">Oct 2025</div>
+            <div class="apc-event-text">Intel's Gaudi 3 wins Azure contract — first major hyperscaler win.</div>
+          </div>
+        </div>
+      </div>
+      <div class="apc-sentiment">
+        <span style="font-size:10px;font-family:var(--mono);color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:.08em">Sentiment</span>
+        <div class="apc-sent-bar">
+          <div style="width:62%;background:#0a7a6a;height:100%;border-radius:2px 0 0 2px"></div>
+          <div style="width:18%;background:rgba(255,255,255,0.12);height:100%"></div>
+          <div style="width:20%;background:var(--accent);height:100%;border-radius:0 2px 2px 0"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span style="font-size:10px;color:#4dd4a0;font-family:var(--mono)">Bullish 62%</span>
+          <span style="font-size:10px;color:var(--accent);font-family:var(--mono)">Bear 20%</span>
+        </div>
+      </div>
+      <div class="apc-watch">
+        <div style="font-size:10px;font-family:var(--mono);color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">What to watch</div>
+        <div class="watch-pill">⚡ Nvidia Q1 earnings · Apr 23</div>
+        <div class="watch-pill">🔍 EU antitrust probe · May 1</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRENDING ARCS -->
+<section class="section" id="trending">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <p class="section-label">Live right now</p>
+        <h2 class="section-title">Trending Story Arcs</h2>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="window.location.href='pages/explore.html'">Explore all →</button>
+    </div>
+    <div class="trending-grid" id="trending-grid">
+      <!-- Populated by JS -->
+      <div class="story-card skeleton-card">
+        <div class="skeleton" style="height:14px;width:60%;margin-bottom:12px"></div>
+        <div class="skeleton" style="height:22px;width:90%;margin-bottom:8px"></div>
+        <div class="skeleton" style="height:14px;width:80%"></div>
+      </div>
+      <div class="story-card skeleton-card">
+        <div class="skeleton" style="height:14px;width:60%;margin-bottom:12px"></div>
+        <div class="skeleton" style="height:22px;width:90%;margin-bottom:8px"></div>
+        <div class="skeleton" style="height:14px;width:80%"></div>
+      </div>
+      <div class="story-card skeleton-card">
+        <div class="skeleton" style="height:14px;width:60%;margin-bottom:12px"></div>
+        <div class="skeleton" style="height:22px;width:90%;margin-bottom:8px"></div>
+        <div class="skeleton" style="height:14px;width:80%"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features-section" id="features">
+  <div class="container">
+    <div class="section-header" style="justify-content:center;text-align:center;flex-direction:column;align-items:center;margin-bottom:64px">
+      <p class="section-label">Why Narratiq</p>
+      <h2 class="section-title" style="max-width:560px">Everything that makes you say<br><em>"I can't go back"</em></h2>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">◎</div>
+        <h3 class="feature-name">Story Arc Tracker</h3>
+        <p class="feature-desc">Pick any business story. AI builds an interactive timeline, maps key players, tracks sentiment shifts, and surfaces contrarian views — all in one living narrative.</p>
+      </div>
+      <div class="feature-card feature-card--accent">
+        <div class="feature-icon">◈</div>
+        <h3 class="feature-name">Adaptive Dashboard</h3>
+        <p class="feature-desc">Your personal knowledge graph. Track reading streaks, depth scores, expertise levels, and story completions across every topic you follow.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">◑</div>
+        <h3 class="feature-name">Discourse Rooms</h3>
+        <p class="feature-desc">Story-anchored discussions where every comment pins to a specific event. AI moderates for insight, flags logical gaps, surfaces the best perspectives.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">◐</div>
+        <h3 class="feature-name">What to Watch</h3>
+        <p class="feature-desc">AI-generated forward intelligence. Know what upcoming events, earnings, or decisions could flip the narrative before the crowd catches on.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">◍</div>
+        <h3 class="feature-name">Contrarian Radar</h3>
+        <p class="feature-desc">Every arc surfaces minority perspectives — the bear case, the skeptic, the overlooked data point. Not just the consensus. The full picture.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">◉</div>
+        <h3 class="feature-name">Real-Time Updates</h3>
+        <p class="feature-desc">Supabase-powered live updates. Every new development, discussion post, and sentiment shift appears instantly — no refresh required.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BANNER -->
+<section class="cta-banner">
+  <div class="container" style="text-align:center">
+    <h2 class="section-title" style="color:#fff;max-width:520px;margin:0 auto 16px">Ready to read news that reads you back?</h2>
+    <p style="color:rgba(255,255,255,0.55);font-size:16px;margin-bottom:32px;font-family:var(--sans)">Free to start. No credit card required.</p>
+    <button class="btn btn-primary" style="font-size:15px;padding:14px 32px" onclick="openAuth('signup')">Create your account →</button>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-top">
+      <div>
+        <div class="nav-logo" style="margin-bottom:8px">Narr<em>atiq</em></div>
+        <p style="font-size:13px;color:var(--ink3);max-width:240px;line-height:1.6">AI-native business intelligence. Stories that evolve. Readers that grow.</p>
+      </div>
+      <div class="footer-links">
+        <a href="pages/explore.html" class="footer-link">Explore Arcs</a>
+        <a href="pages/dashboard.html" class="footer-link">Dashboard</a>
+        <a onclick="openAuth('signup')" class="footer-link" style="cursor:pointer">Sign Up</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Narratiq. Built for the hackathon generation.</span>
+      <span style="display:flex;gap:16px;align-items:center">
+        <span class="tag tag-default">Next.js ready</span>
+        <span class="tag tag-green">Supabase</span>
+        <span class="tag tag-blue">Claude API</span>
+        <span class="tag tag-default">Vercel</span>
+      </span>
+    </div>
+  </div>
+</footer>
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="auth-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeAuth()">✕</button>
+    <h2 class="modal-title">Welcome to Narratiq</h2>
+    <p class="modal-sub">Business intelligence that grows with you.</p>
+    <div class="modal-tabs">
+      <button class="modal-tab active" id="tab-signin" onclick="switchTab('signin')">Sign In</button>
+      <button class="modal-tab" id="tab-signup" onclick="switchTab('signup')">Create Account</button>
+    </div>
+    <!-- SIGN IN -->
+    <div id="panel-signin">
+      <div class="input-group">
+        <label class="input-label">Email</label>
+        <input class="input" type="email" id="si-email" placeholder="you@example.com">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Password</label>
+        <input class="input" type="password" id="si-password" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primary w-full" onclick="handleSignIn()" id="btn-signin">Sign In</button>
+    </div>
+    <!-- SIGN UP -->
+    <div id="panel-signup" class="hidden">
+      <div class="input-group">
+        <label class="input-label">Username</label>
+        <input class="input" type="text" id="su-username" placeholder="@yourname">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Email</label>
+        <input class="input" type="email" id="su-email" placeholder="you@example.com">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Password</label>
+        <input class="input" type="password" id="su-password" placeholder="Min 8 characters">
+      </div>
+      <button class="btn btn-primary w-full" onclick="handleSignUp()" id="btn-signup">Create Account</button>
+    </div>
+    <p style="font-size:12px;color:var(--ink3);text-align:center;margin-top:20px;font-family:var(--sans)">
+      By continuing you agree to our Terms of Service.
+    </p>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script>
+// ── AUTH MODAL ──
+function openAuth(tab = 'signin') {
+  document.getElementById('auth-modal').classList.add('open');
+  switchTab(tab);
+}
+function closeAuth() {
+  document.getElementById('auth-modal').classList.remove('open');
+}
+function switchTab(tab) {
+  document.getElementById('panel-signin').classList.toggle('hidden', tab !== 'signin');
+  document.getElementById('panel-signup').classList.toggle('hidden', tab !== 'signup');
+  document.getElementById('tab-signin').classList.toggle('active', tab === 'signin');
+  document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+}
+document.getElementById('auth-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('auth-modal')) closeAuth();
+});
+
+async function handleSignIn() {
+  const btn = document.getElementById('btn-signin');
+  const email = document.getElementById('si-email').value;
+  const password = document.getElementById('si-password').value;
+  if (!email || !password) { showToast('Please fill all fields', 'error'); return; }
+  btn.innerHTML = '<div class="loader"></div>';
+  btn.disabled = true;
+  try {
+    await Auth.signIn(email, password);
+    showToast('Welcome back!', 'success');
+    closeAuth();
+    setTimeout(() => window.location.href = 'pages/dashboard.html', 800);
+  } catch(e) {
+    showToast(e.message, 'error');
+    btn.innerHTML = 'Sign In'; btn.disabled = false;
+  }
+}
+
+async function handleSignUp() {
+  const btn = document.getElementById('btn-signup');
+  const username = document.getElementById('su-username').value;
+  const email = document.getElementById('su-email').value;
+  const password = document.getElementById('su-password').value;
+  if (!username || !email || !password) { showToast('Please fill all fields', 'error'); return; }
+  btn.innerHTML = '<div class="loader"></div>';
+  btn.disabled = true;
+  try {
+    await Auth.signUp(email, password, username);
+    showToast('Account created! Check your email to verify.', 'success');
+    closeAuth();
+  } catch(e) {
+    showToast(e.message, 'error');
+    btn.innerHTML = 'Create Account'; btn.disabled = false;
+  }
+}
+
+// ── NAV AUTH STATE ──
+async function initNav() {
+  const user = await Auth.getUser();
+  const area = document.getElementById('nav-auth-area');
+  if (user) {
+    const profile = await Auth.getProfile(user.id);
+    const initials = profile?.avatar_initials || user.email.slice(0,2).toUpperCase();
+    area.innerHTML = `
+      <div class="nav-user-row">
+        <span class="nav-username">@${profile?.username || 'user'}</span>
+        <div class="nav-avatar" onclick="window.location.href='pages/dashboard.html'" title="Dashboard">${initials}</div>
+        <button class="nav-link" onclick="Auth.signOut()">Sign out</button>
+      </div>`;
+  }
+}
+
+// ── TRENDING ──
+async function loadTrending() {
+  const grid = document.getElementById('trending-grid');
+  // Demo data (replace with Stories.getTrending() in production)
+  const demos = [
+    { id:'demo1', title:'AI Chip Wars: Nvidia vs AMD vs Intel', category:'Technology', tracking_count:4231, sentiment_pos:62, summary:'Three-way battle for AI accelerator dominance as hyperscalers diversify away from Nvidia.' },
+    { id:'demo2', title:'India\'s IPO Supercycle 2026', category:'Markets', tracking_count:2847, sentiment_pos:78, summary:'Record 340 IPOs filed in Q1 alone as domestic retail investor base crosses 200M.' },
+    { id:'demo3', title:'Carbon Credit Market Collapse', category:'Climate Finance', tracking_count:1902, sentiment_pos:31, summary:'Voluntary carbon markets face existential crisis as verification scandals mount.' },
+    { id:'demo4', title:'OpenAI vs Anthropic: The Enterprise War', category:'AI Business', tracking_count:3120, sentiment_pos:55, summary:'Battle for Fortune 500 AI contracts intensifies — deal sizes crossing $100M annually.' },
+    { id:'demo5', title:'Fed\'s Rate Cut Endgame', category:'Macro', tracking_count:2210, sentiment_pos:48, summary:'Markets price in 3 cuts in 2026 but inflation stickiness at 3.1% complicates the path.' },
+    { id:'demo6', title:'EV Shakeout: Who Survives 2026?', category:'Automotive', tracking_count:1654, sentiment_pos:40, summary:'Rivian, Lucid, and Fisker face existential cash burn as Tesla slashes prices again.' },
+  ];
+  try {
+    const live = await Stories.getTrending();
+    const stories = live.length > 0 ? live : demos;
+    renderStoryCards(stories, grid);
+  } catch {
+    renderStoryCards(demos, grid);
+  }
+}
+
+function renderStoryCards(stories, container) {
+  container.innerHTML = stories.map(s => `
+    <div class="story-card" onclick="window.location.href='pages/arc.html?id=${s.id}'">
+      <div class="story-card-top">
+        <span class="tag tag-default">${s.category || 'Business'}</span>
+        <span style="font-size:11px;color:var(--ink3);font-family:var(--mono)">${(s.tracking_count||0).toLocaleString()} tracking</span>
+      </div>
+      <h3 class="story-card-title">${s.title}</h3>
+      <p class="story-card-summary">${s.summary || ''}</p>
+      <div class="story-card-sentiment">
+        <div class="sentiment-bar" style="margin-bottom:4px">
+          <div class="sent-pos" style="width:${s.sentiment_pos||50}%"></div>
+          <div class="sent-neu" style="width:15%"></div>
+          <div class="sent-neg" style="width:${100-(s.sentiment_pos||50)-15}%"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span style="font-size:10px;color:var(--teal);font-family:var(--mono)">Bullish ${s.sentiment_pos||50}%</span>
+          <span style="font-size:10px;color:var(--accent);font-family:var(--mono)">Bear ${100-(s.sentiment_pos||50)-15}%</span>
+        </div>
+      </div>
+      <div class="story-card-footer">
+        <span class="btn btn-ghost btn-sm" style="font-size:12px">Explore arc →</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── PLATFORM STATS ──
+async function loadStats() {
+  try {
+    const stats = await Analytics.getPlatformStats();
+    document.getElementById('stat-users').textContent = stats.totalUsers > 0 ? stats.totalUsers.toLocaleString() : '2,400+';
+    document.getElementById('stat-stories').textContent = stats.totalStories > 0 ? stats.totalStories.toLocaleString() : '184';
+    document.getElementById('stat-discussions').textContent = stats.totalDiscussions > 0 ? stats.totalDiscussions.toLocaleString() : '12,847';
+  } catch {
+    document.getElementById('stat-users').textContent = '2,400+';
+    document.getElementById('stat-stories').textContent = '184';
+    document.getElementById('stat-discussions').textContent = '12,847';
+  }
+}
+
+function scrollToSection(id) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+}
+
+// Init
+initNav();
+loadTrending();
+loadStats();
+</script>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Explore — Narratiq</title>
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/explore.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo" onclick="window.location.href='../index.html'" style="cursor:pointer">Narr<em>atiq</em></div>
+  <div class="nav-links">
+    <button class="nav-link active">Explore</button>
+    <button class="nav-link" onclick="window.location.href='arc.html'">+ New Arc</button>
+    <button class="nav-link" onclick="window.location.href='dashboard.html'">Dashboard</button>
+    <div id="nav-auth-area"><button class="nav-btn" onclick="window.location.href='../index.html'">Sign in</button></div>
+  </div>
+</nav>
+
+<div class="explore-layout">
+
+  <!-- HEADER -->
+  <div class="explore-header">
+    <div>
+      <h1 class="explore-title">Story Arc Library</h1>
+      <p class="explore-sub">Every major business story, tracked as a living narrative.</p>
+    </div>
+    <button class="btn btn-primary" onclick="window.location.href='arc.html'">+ Build new arc</button>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filter-bar">
+    <div class="filter-left">
+      <input class="input filter-search" id="filter-search" placeholder="Search story arcs..." oninput="filterStories()">
+    </div>
+    <div class="filter-right">
+      <button class="filter-chip active" onclick="filterCat('all', this)">All</button>
+      <button class="filter-chip" onclick="filterCat('Technology', this)">Technology</button>
+      <button class="filter-chip" onclick="filterCat('Markets', this)">Markets</button>
+      <button class="filter-chip" onclick="filterCat('Macro', this)">Macro</button>
+      <button class="filter-chip" onclick="filterCat('Automotive', this)">Automotive</button>
+      <button class="filter-chip" onclick="filterCat('Climate', this)">Climate</button>
+      <button class="filter-chip" onclick="filterCat('AI Business', this)">AI Business</button>
+    </div>
+  </div>
+
+  <!-- SORT BAR -->
+  <div class="sort-bar">
+    <span class="sort-label" id="story-count">Loading...</span>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span style="font-size:12px;color:var(--ink3);font-family:var(--mono)">Sort:</span>
+      <select class="sort-select" onchange="sortStories(this.value)">
+        <option value="tracking">Most Tracked</option>
+        <option value="recent">Most Recent</option>
+        <option value="bullish">Most Bullish</option>
+        <option value="bearish">Most Bearish</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- STORIES GRID -->
+  <div class="stories-grid" id="stories-grid">
+    <!-- Skeletons -->
+    ${Array(6).fill('<div class="arc-card skeleton-card"><div class="skeleton" style="height:16px;width:50%;margin-bottom:14px"></div><div class="skeleton" style="height:24px;width:90%;margin-bottom:10px"></div><div class="skeleton" style="height:14px;width:80%;margin-bottom:6px"></div><div class="skeleton" style="height:14px;width:70%"></div></div>').join('')}
+  </div>
+
+</div>
+
+<script src="../js/config.js"></script>
+<script>
+let allStories = [];
+let currentCat = 'all';
+let currentSort = 'tracking';
+
+const DEMO_STORIES = [
+  { id:'d1', title:'AI Chip Wars: Nvidia vs AMD vs Intel', category:'Technology', tracking_count:4231, sentiment_pos:62, summary:'Three-way battle for AI accelerator dominance as hyperscalers diversify away from Nvidia monopoly.', created_at: new Date(Date.now()-86400000*2).toISOString() },
+  { id:'d2', title:'India\'s IPO Supercycle 2026', category:'Markets', tracking_count:2847, sentiment_pos:78, summary:'Record 340 IPOs filed in Q1 alone as domestic retail investor base crosses 200 million accounts.', created_at: new Date(Date.now()-86400000*4).toISOString() },
+  { id:'d3', title:'Carbon Credit Market Collapse', category:'Climate', tracking_count:1902, sentiment_pos:31, summary:'Voluntary carbon markets face existential crisis as verification scandals mount and buyers retreat.', created_at: new Date(Date.now()-86400000*6).toISOString() },
+  { id:'d4', title:'OpenAI vs Anthropic: The Enterprise War', category:'AI Business', tracking_count:3120, sentiment_pos:55, summary:'Battle for Fortune 500 AI contracts intensifies with deal sizes crossing $100M annually.', created_at: new Date(Date.now()-86400000*1).toISOString() },
+  { id:'d5', title:'Fed\'s Rate Cut Endgame 2026', category:'Macro', tracking_count:2210, sentiment_pos:48, summary:'Markets price in 3 cuts but inflation stickiness at 3.1% complicates the path forward.', created_at: new Date(Date.now()-86400000*3).toISOString() },
+  { id:'d6', title:'EV Shakeout: Who Survives 2026?', category:'Automotive', tracking_count:1654, sentiment_pos:40, summary:'Rivian, Lucid face existential cash burn as Tesla price cuts pressure the entire sector.', created_at: new Date(Date.now()-86400000*5).toISOString() },
+  { id:'d7', title:'Reliance vs Adani: India\'s Infrastructure War', category:'Markets', tracking_count:1440, sentiment_pos:60, summary:'Two conglomerates battle for dominance in ports, airports, energy and telecom across India.', created_at: new Date(Date.now()-86400000*7).toISOString() },
+  { id:'d8', title:'Apple\'s AI Pivot: Too Late?', category:'Technology', tracking_count:3450, sentiment_pos:52, summary:'iPhone maker scrambles to integrate AI after being outmaneuvered by Google and OpenAI on features.', created_at: new Date(Date.now()-86400000*2).toISOString() },
+  { id:'d9', title:'Crypto\'s Institutional Moment', category:'Markets', tracking_count:2100, sentiment_pos:65, summary:'BlackRock, Fidelity ETF flows hit $120B — traditional finance fully embraces digital assets.', created_at: new Date(Date.now()-86400000*3).toISOString() },
+];
+
+async function init() {
+  const user = await Auth.getUser();
+  if (user) {
+    const profile = await Auth.getProfile(user.id);
+    const area = document.getElementById('nav-auth-area');
+    area.innerHTML = `<div class="nav-avatar" onclick="window.location.href='dashboard.html'">${profile?.avatar_initials||user.email.slice(0,2).toUpperCase()}</div>`;
+  }
+
+  try {
+    const live = await Stories.getAll();
+    allStories = live.length > 0 ? live : DEMO_STORIES;
+  } catch {
+    allStories = DEMO_STORIES;
+  }
+
+  render();
+}
+
+function render() {
+  let filtered = allStories;
+  if (currentCat !== 'all') filtered = filtered.filter(s => s.category === currentCat);
+  const q = document.getElementById('filter-search').value.toLowerCase();
+  if (q) filtered = filtered.filter(s => s.title.toLowerCase().includes(q) || (s.summary||'').toLowerCase().includes(q));
+
+  if (currentSort === 'tracking') filtered.sort((a,b) => (b.tracking_count||0)-(a.tracking_count||0));
+  if (currentSort === 'recent') filtered.sort((a,b) => new Date(b.created_at)-new Date(a.created_at));
+  if (currentSort === 'bullish') filtered.sort((a,b) => (b.sentiment_pos||50)-(a.sentiment_pos||50));
+  if (currentSort === 'bearish') filtered.sort((a,b) => (a.sentiment_pos||50)-(b.sentiment_pos||50));
+
+  document.getElementById('story-count').textContent = `${filtered.length} story arc${filtered.length!==1?'s':''}`;
+
+  const grid = document.getElementById('stories-grid');
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div class="explore-empty">No stories match your search. <a onclick="document.getElementById(\'filter-search\').value=\'\';filterStories()" style="color:var(--accent);cursor:pointer">Clear filter</a></div>';
+    return;
+  }
+
+  grid.innerHTML = filtered.map(s => {
+    const pos = s.sentiment_pos || 50;
+    const neg = 100 - pos - 15;
+    return `
+      <div class="arc-card" onclick="window.location.href='arc.html?id=${s.id}'">
+        <div class="arc-card-top">
+          <span class="tag tag-default">${s.category||'Business'}</span>
+          <span style="font-size:11px;font-family:var(--mono);color:var(--ink3)">${(s.tracking_count||0).toLocaleString()} tracking</span>
+        </div>
+        <h3 class="arc-card-title">${s.title}</h3>
+        <p class="arc-card-summary">${s.summary||''}</p>
+        <div class="arc-card-sent">
+          <div style="height:5px;background:var(--paper2);border-radius:3px;overflow:hidden;display:flex;gap:1px;margin-bottom:6px">
+            <div style="width:${pos}%;background:var(--teal);height:100%;border-radius:2px 0 0 2px"></div>
+            <div style="width:15%;background:var(--paper3);height:100%"></div>
+            <div style="width:${neg}%;background:var(--accent);height:100%;border-radius:0 2px 2px 0"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="font-size:10px;color:var(--teal);font-family:var(--mono)">Bullish ${pos}%</span>
+            <span style="font-size:10px;color:var(--accent);font-family:var(--mono)">Bear ${neg}%</span>
+          </div>
+        </div>
+        <div class="arc-card-footer">
+          <span style="font-size:11px;font-family:var(--mono);color:var(--ink3)">${timeAgo(s.created_at)}</span>
+          <span class="arc-explore-btn">Explore arc →</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function filterCat(cat, btn) {
+  currentCat = cat;
+  document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function filterStories() { render(); }
+function sortStories(val) { currentSort = val; render(); }
+
+init();
+</script>
+</body>
+</html>
