@@ -4,8 +4,6 @@
 
 ---
 
-## 🚀 Deploy in 15 Minutes
-
 ### Step 1: Supabase Setup
 
 1. Go to [supabase.com](https://supabase.com) → New Project
@@ -162,14 +160,3 @@ When you log in with that email, you'll see the "Creator Analytics" tab with:
 - **Animations:** Subtle floating hero card, fade-up reveals, pulse indicators
 
 ---
-
-## 🏆 Hackathon Notes
-
-This is a **fully deployable static site** with:
-- Zero backend (Supabase handles everything)
-- Real auth, real database, real realtime
-- Works offline with demo data fallbacks
-- Mobile responsive
-- Production-ready RLS security
-
-**For the demo:** Show the Story Arc Tracker first. Type "Nvidia vs AMD chip war" and let the arc generate in front of the jury. That 30-second moment wins the room.
