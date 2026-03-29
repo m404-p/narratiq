@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Story Arc — Narratiq</title>
-  <link rel="stylesheet" href="../css/global.css">
-  <link rel="stylesheet" href="../css/arc.css">
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/arc.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -135,7 +135,7 @@
   </div>
 </div>
 
-<script src="../js/config.js"></script>
+<script src="/js/config.js"></script>
 <script>
 let currentStoryId = null;
 let discSubscription = null;
@@ -218,14 +218,15 @@ async function generateArc() {
         });
         currentStoryId = saved.id;
         loadDiscussions(saved.id);
-        await Stories.track(saved.id);
+        subscribeDiscussions(saved.id);
+        try { await Stories.track(saved.id); } catch(te) {}
       } catch(e) {
-        console.warn('Supabase save failed:', e);
-        currentStoryId = 'local';
+        console.warn('Supabase save failed:', e.message);
+        currentStoryId = null;
         loadDiscussions('local');
       }
     } else {
-      currentStoryId = 'local';
+      currentStoryId = null;
       loadDiscussions('local');
     }
   } catch(e) {
@@ -502,15 +503,22 @@ function renderDiscussionItem(d) {
 
 async function postDiscussion() {
   if (!currentUser) { showToast('Sign in to post', 'error'); return; }
+  if (!currentStoryId) {
+    showToast('Story not saved yet — wait a moment and try again', 'error');
+    return;
+  }
   const content = document.getElementById('disc-input').value.trim();
   if (!content) { showToast('Write something first', 'error'); return; }
   try {
-    const item = await Discussions.post(currentStoryId || 'demo', content);
+    const item = await Discussions.post(currentStoryId, content);
     document.getElementById('disc-list').insertAdjacentHTML('beforeend', renderDiscussionItem(item));
     document.getElementById('disc-input').value = '';
     showToast('Posted!', 'success');
-    // Update depth score
-    await sb.from('profiles').update({ depth_score: sb.raw('depth_score + 10') }).eq('id', currentUser.id);
+    // Update depth score safely
+    const { data: prof } = await sb.from('profiles').select('depth_score').eq('id', currentUser.id).single();
+    if (prof) {
+      await sb.from('profiles').update({ depth_score: (prof.depth_score || 0) + 10 }).eq('id', currentUser.id);
+    }
   } catch(e) {
     showToast(e.message, 'error');
   }
